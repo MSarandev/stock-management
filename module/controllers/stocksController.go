@@ -28,6 +28,7 @@ type StockService interface {
 	GetOne(ctx context.Context, stockId string) (*entities.Stock, error)
 	InsertOne(ctx context.Context, stock *entities.Stock) error
 	UpdateOne(ctx context.Context, stock *entities.Stock, stockId string) error
+	DeleteOne(ctx context.Context, stockId string) error
 }
 
 type StockController struct {
@@ -119,8 +120,13 @@ func (s *StockController) UpdateOne(w http.ResponseWriter, r *http.Request) {
 	m.Unlock()
 }
 
-func (s *StockController) DeleteOne(http.ResponseWriter, *http.Request) {
-	return
+func (s *StockController) DeleteOne(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	if err := s.service.DeleteOne(s.ctx, vars["id"]); err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
 }
 
 func validate(input *entities.Stock, op OpType) error {

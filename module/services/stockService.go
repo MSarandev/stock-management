@@ -16,6 +16,7 @@ type StockStore interface {
 	GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, error)
 	InsertOne(ctx context.Context, stock *entities.Stock) error
 	UpdateOne(ctx context.Context, stock *entities.Stock) error
+	DeleteOne(ctx context.Context, id uuid.UUID) error
 }
 
 type StockService struct {
@@ -67,6 +68,15 @@ func (s *StockService) UpdateOne(ctx context.Context, stock *entities.Stock, sto
 	stock.ID = id
 
 	return s.repo.UpdateOne(ctx, stock)
+}
+
+func (s *StockService) DeleteOne(ctx context.Context, stockId string) error {
+	id, errParse := uuid.Parse(stockId)
+	if errParse != nil {
+		return errParse
+	}
+
+	return s.repo.DeleteOne(ctx, id)
 }
 
 func checkQuantity(s *entities.Stock) error {

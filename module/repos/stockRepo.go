@@ -3,6 +3,8 @@ package repos
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -74,6 +76,35 @@ func (s *StockRepo) UpdateOne(ctx context.Context, stock *entities.Stock) error 
 		_, err := tx.NewUpdate().
 			Model(stock).
 			WherePK().
+			Exec(ctx)
+
+		s.logger.Error(err)
+
+		return err
+	})
+}
+
+func (s *StockRepo) DeleteOne(ctx context.Context, id uuid.UUID) error {
+	exists, errExists := s.db.Base.NewSelect().
+		Model(new(entities.Stock)).
+		Where("id = ?", id).
+		Exists(ctx)
+	if errExists != nil {
+		s.logger.Error(errExists)
+		return errExists
+	}
+
+	if !exists {
+		err := errors.New(fmt.Sprintf("record with id: %s doesn't exist", id))
+
+		s.logger.Error(err)
+		return err
+	}
+
+	return s.db.Base.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		_, err := tx.NewDelete().
+			Model(new(entities.Stock)).
+			Where("id = ?", id).
 			Exec(ctx)
 
 		s.logger.Error(err)
