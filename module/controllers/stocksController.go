@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -15,10 +16,18 @@ import (
 	"stocks-api/support/db"
 )
 
+type OpType string
+
+const (
+	insert OpType = "INSERT"
+	update OpType = "UPDATE"
+)
+
 type StockService interface {
 	GetAll(ctx context.Context) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, stockId string) (*entities.Stock, error)
 	InsertOne(ctx context.Context, stock *entities.Stock) error
+	UpdateOne(ctx context.Context, stock *entities.Stock, stockId string) error
 }
 
 type StockController struct {
@@ -59,19 +68,13 @@ func (s *StockController) GetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *StockController) InsertOne(w http.ResponseWriter, r *http.Request) {
-	reqBody, errRead := ioutil.ReadAll(r.Body)
-	if errRead != nil {
-		w.Write([]byte(errRead.Error()))
+	stock, errParse := reqToStock(r)
+	if errParse != nil {
+		w.Write([]byte(errParse.Error()))
 		return
 	}
 
-	stock := entities.Stock{}
-	if err := json.Unmarshal(reqBody, &stock); err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	errValidation := validate(stock)
+	errValidation := validate(stock, insert)
 	if errValidation != nil {
 		w.Write([]byte(errValidation.Error()))
 		return
@@ -80,7 +83,7 @@ func (s *StockController) InsertOne(w http.ResponseWriter, r *http.Request) {
 	var m sync.Mutex
 	m.Lock()
 
-	if err := s.service.InsertOne(s.ctx, &stock); err != nil {
+	if err := s.service.InsertOne(s.ctx, stock); err != nil {
 		w.Write([]byte(err.Error()))
 		m.Unlock()
 		return
@@ -89,22 +92,67 @@ func (s *StockController) InsertOne(w http.ResponseWriter, r *http.Request) {
 	m.Unlock()
 }
 
-func (s *StockController) UpdateOne(http.ResponseWriter, *http.Request) {
-	return
+func (s *StockController) UpdateOne(w http.ResponseWriter, r *http.Request) {
+	stock, errParse := reqToStock(r)
+	if errParse != nil {
+		w.Write([]byte(errParse.Error()))
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	errValidation := validate(stock, update)
+	if errValidation != nil {
+		w.Write([]byte(errValidation.Error()))
+		return
+	}
+
+	var m sync.Mutex
+	m.Lock()
+
+	if err := s.service.UpdateOne(s.ctx, stock, vars["id"]); err != nil {
+		w.Write([]byte(err.Error()))
+		m.Unlock()
+		return
+	}
+
+	m.Unlock()
 }
 
 func (s *StockController) DeleteOne(http.ResponseWriter, *http.Request) {
 	return
 }
 
-func validate(input entities.Stock) error {
+func validate(input *entities.Stock, op OpType) error {
 	vl := val.New()
 
-	return vl.Struct(struct {
-		ID   string `validate:"required,uuid4" json:"id"`
-		Name string `validate:"required" json:"name"`
-	}{
-		input.ID.String(),
-		input.Name,
-	})
+	if op == insert {
+		return vl.Struct(InsertStock{
+			ID:   input.ID.String(),
+			Name: input.Name,
+		})
+	}
+
+	if op == update {
+		return vl.Struct(UpdateStock{
+			Name:     input.Name,
+			Quantity: int(input.Quantity),
+		})
+	}
+
+	return errors.New("unexpected operation type received")
+}
+
+func reqToStock(r *http.Request) (*entities.Stock, error) {
+	reqBody, errRead := ioutil.ReadAll(r.Body)
+	if errRead != nil {
+		return nil, errRead
+	}
+
+	stock := entities.Stock{}
+	if err := json.Unmarshal(reqBody, &stock); err != nil {
+		return nil, err
+	}
+
+	return &stock, nil
 }

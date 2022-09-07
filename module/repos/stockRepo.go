@@ -50,6 +50,34 @@ func (s *StockRepo) InsertOne(ctx context.Context, stock *entities.Stock) error 
 			Model(stock).
 			Exec(ctx)
 
+		s.logger.Error(err)
+
+		return err
+	})
+}
+
+func (s *StockRepo) UpdateOne(ctx context.Context, stock *entities.Stock) error {
+	currentRecord := entities.Stock{}
+
+	errExists := s.db.Base.NewSelect().
+		Model(stock).
+		Where("id = ?", stock.ID).
+		Scan(ctx, &currentRecord)
+	if errExists != nil {
+		s.logger.Error(errExists)
+		return errExists
+	}
+
+	return s.db.Base.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		stock.CreatedAt = currentRecord.CreatedAt
+
+		_, err := tx.NewUpdate().
+			Model(stock).
+			WherePK().
+			Exec(ctx)
+
+		s.logger.Error(err)
+
 		return err
 	})
 }

@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,3 +20,13 @@ type Stock struct {
 }
 
 type StockItems []*Stock
+
+func (s *Stock) BeforeAppendModel(_ context.Context, query bun.Query) error {
+	switch query.(type) {
+	case *bun.InsertQuery:
+		s.CreatedAt = time.Now()
+	case *bun.UpdateQuery:
+		s.UpdatedAt = time.Now()
+	}
+	return nil
+}

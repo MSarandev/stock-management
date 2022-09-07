@@ -30,7 +30,7 @@ func (s *Serve) RegisterHandlers() {
 	s.Server.HandleFunc("/", s.stockController.GetAll).Methods("GET")
 	s.Server.HandleFunc("/", s.stockController.InsertOne).Methods("POST")
 	s.Server.HandleFunc("/{id}", s.stockController.GetOne).Methods("GET")
-	s.Server.HandleFunc("/{id}", s.stockController.GetOne).Methods("POST")
+	s.Server.HandleFunc("/{id}", s.stockController.UpdateOne).Methods("POST")
 	s.Server.HandleFunc("/{id}", s.stockController.DeleteOne).Methods("PUT")
 }
 

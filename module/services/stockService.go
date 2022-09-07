@@ -15,6 +15,7 @@ type StockStore interface {
 	GetAll(ctx context.Context) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, error)
 	InsertOne(ctx context.Context, stock *entities.Stock) error
+	UpdateOne(ctx context.Context, stock *entities.Stock) error
 }
 
 type StockService struct {
@@ -46,9 +47,32 @@ func (s *StockService) GetOne(ctx context.Context, stockId string) (*entities.St
 }
 
 func (s *StockService) InsertOne(ctx context.Context, stock *entities.Stock) error {
-	if stock.Quantity < 0 {
-		return errors.New("Input quantity is less than 0")
+	if err := checkQuantity(stock); err != nil {
+		return err
 	}
 
 	return s.repo.InsertOne(ctx, stock)
+}
+
+func (s *StockService) UpdateOne(ctx context.Context, stock *entities.Stock, stockId string) error {
+	id, errParse := uuid.Parse(stockId)
+	if errParse != nil {
+		return errParse
+	}
+
+	if err := checkQuantity(stock); err != nil {
+		return err
+	}
+
+	stock.ID = id
+
+	return s.repo.UpdateOne(ctx, stock)
+}
+
+func checkQuantity(s *entities.Stock) error {
+	if s.Quantity < 0 {
+		return errors.New("Input quantity is less than 0")
+	}
+
+	return nil
 }
