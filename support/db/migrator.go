@@ -47,31 +47,3 @@ func (m *Migrator) RollbackOne(ctx context.Context, model interface{}, modelFlag
 	m.logger.Infof("Rollback successful for: %s", modelFlag)
 	return nil
 }
-
-// DropTable drops a table, per a given model.
-func (m *Migrator) DropTable(ctx context.Context, model interface{}, modelFlag string) error {
-	m.logger.Infof("Starting table drop for: %s", modelFlag)
-
-	_, err := m.dbInstance.db.NewDropTable().Model(model).Exec(ctx)
-	if err != nil {
-		m.logger.Error(err)
-		return err
-	}
-
-	m.logger.Infof("Table drop successful for: %s", modelFlag)
-	return nil
-}
-
-// RecreateTable drops and re-migrates a table, per the model provided.
-func (m *Migrator) RecreateTable(ctx context.Context, model interface{}, modelFlag string) error {
-	m.logger.Infof("Recreating table: %s", modelFlag)
-
-	err := m.dbInstance.db.ResetModel(ctx, model)
-	if err != nil {
-		m.logger.Error(err)
-		return err
-	}
-
-	m.logger.Infof("Table recreation successful: %s", modelFlag)
-	return nil
-}
