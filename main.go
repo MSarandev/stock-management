@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	"stocks-api/module/controllers"
 	"stocks-api/support/db"
+	"stocks-api/support/server"
 )
 
 func init() {
@@ -17,14 +20,26 @@ func init() {
 func main() {
 	logger := logrus.New()
 
+	db := prepDB(logger)
+	s := prepServer(logger, db, context.Background())
+
+	s.Serve()
+}
+
+func prepDB(l *logrus.Logger) *db.Instance {
 	conn, err := db.NewConnection()
 	if err != nil {
-		logger.Fatal(err)
+		l.Fatal(err)
 	}
 
-	instance := db.NewInstance(conn, logger)
+	instance := db.NewInstance(conn, l)
+	l.Log(logrus.InfoLevel, "DB conn: ", instance.Health())
 
-	ok := instance.Health()
+	return instance
+}
 
-	logger.Log(logrus.InfoLevel, "DB conn: ", ok)
+func prepServer(l *logrus.Logger, db *db.Instance, ctx context.Context) *server.Serve {
+	controller := controllers.NewStockController(l, db, ctx)
+
+	return server.NewServe(controller, l)
 }

@@ -24,7 +24,7 @@ func NewMigrator(logger *logrus.Logger, db *Instance) *Migrator {
 func (m *Migrator) MigrateOne(ctx context.Context, model interface{}, modelFlag string) error {
 	m.logger.Infof("Starting migration for: %s", modelFlag)
 
-	_, err := m.dbInstance.db.NewCreateTable().Model(model).Exec(ctx)
+	_, err := m.dbInstance.Base.NewCreateTable().Model(model).Exec(ctx)
 	if err != nil {
 		m.logger.Error(err)
 		return err
@@ -38,7 +38,7 @@ func (m *Migrator) MigrateOne(ctx context.Context, model interface{}, modelFlag 
 func (m *Migrator) RollbackOne(ctx context.Context, model interface{}, modelFlag string) error {
 	m.logger.Infof("Starting rollback for: %s", modelFlag)
 
-	_, err := m.dbInstance.db.NewDropTable().Model(model).Exec(ctx)
+	_, err := m.dbInstance.Base.NewDropTable().Model(model).Exec(ctx)
 	if err != nil {
 		m.logger.Error(err)
 		return err

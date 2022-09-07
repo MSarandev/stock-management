@@ -9,7 +9,7 @@ import (
 
 // Stock - a declared entity.
 type Stock struct {
-	bun.BaseModel `bun:"table:stocks,alias:stocks"`
+	bun.BaseModel `bun:"table:stock,alias:stock"`
 
 	ID        uuid.UUID `bun:"id,pk,notnull" json:"id" yaml:"id"`
 	Name      string    `bun:"name,notnull" json:"name" yaml:"name"`
@@ -17,3 +17,5 @@ type Stock struct {
 	CreatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp" json:"created_at" yaml:"created_at"`
 	UpdatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp" json:"updated_at" yaml:"updated_at"`
 }
+
+type StockItems []*Stock

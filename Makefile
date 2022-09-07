@@ -25,7 +25,3 @@ migrate:
 .PHONY: rollback
 rollback:
 	@go run cmd/migrator/main.go rollback
-
-.PHONY: serve
-serve:
-	@go run cmd/server/main.go
