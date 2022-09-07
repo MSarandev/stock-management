@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ import (
 type StockStore interface {
 	GetAll(ctx context.Context) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, error)
+	InsertOne(ctx context.Context, stock *entities.Stock) error
 }
 
 type StockService struct {
@@ -41,4 +43,12 @@ func (s *StockService) GetOne(ctx context.Context, stockId string) (*entities.St
 	}
 
 	return s.repo.GetOne(ctx, id)
+}
+
+func (s *StockService) InsertOne(ctx context.Context, stock *entities.Stock) error {
+	if stock.Quantity < 0 {
+		return errors.New("Input quantity is less than 0")
+	}
+
+	return s.repo.InsertOne(ctx, stock)
 }

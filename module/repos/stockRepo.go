@@ -2,9 +2,11 @@ package repos
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"github.com/uptrace/bun"
 	"stocks-api/module/entities"
 	"stocks-api/support/db"
 )
@@ -40,4 +42,14 @@ func (s *StockRepo) GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, 
 		Scan(ctx)
 
 	return &x, nil
+}
+
+func (s *StockRepo) InsertOne(ctx context.Context, stock *entities.Stock) error {
+	return s.db.Base.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		_, err := tx.NewInsert().
+			Model(stock).
+			Exec(ctx)
+
+		return err
+	})
 }

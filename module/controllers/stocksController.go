@@ -3,8 +3,11 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"sync"
 
+	val "github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"stocks-api/module/entities"
@@ -15,6 +18,7 @@ import (
 type StockService interface {
 	GetAll(ctx context.Context) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, stockId string) (*entities.Stock, error)
+	InsertOne(ctx context.Context, stock *entities.Stock) error
 }
 
 type StockController struct {
@@ -54,8 +58,35 @@ func (s *StockController) GetOne(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func (s *StockController) InsertOne(http.ResponseWriter, *http.Request) {
+func (s *StockController) InsertOne(w http.ResponseWriter, r *http.Request) {
+	reqBody, errRead := ioutil.ReadAll(r.Body)
+	if errRead != nil {
+		w.Write([]byte(errRead.Error()))
+		return
+	}
 
+	stock := entities.Stock{}
+	if err := json.Unmarshal(reqBody, &stock); err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	errValidation := validate(stock)
+	if errValidation != nil {
+		w.Write([]byte(errValidation.Error()))
+		return
+	}
+
+	var m sync.Mutex
+	m.Lock()
+
+	if err := s.service.InsertOne(s.ctx, &stock); err != nil {
+		w.Write([]byte(err.Error()))
+		m.Unlock()
+		return
+	}
+
+	m.Unlock()
 }
 
 func (s *StockController) UpdateOne(http.ResponseWriter, *http.Request) {
@@ -64,4 +95,16 @@ func (s *StockController) UpdateOne(http.ResponseWriter, *http.Request) {
 
 func (s *StockController) DeleteOne(http.ResponseWriter, *http.Request) {
 	return
+}
+
+func validate(input entities.Stock) error {
+	vl := val.New()
+
+	return vl.Struct(struct {
+		ID   string `validate:"required,uuid4" json:"id"`
+		Name string `validate:"required" json:"name"`
+	}{
+		input.ID.String(),
+		input.Name,
+	})
 }
