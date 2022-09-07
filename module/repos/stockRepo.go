@@ -38,12 +38,26 @@ func (s *StockRepo) GetAll(ctx context.Context) ([]*entities.Stock, error) {
 func (s *StockRepo) GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, error) {
 	var x entities.Stock
 
-	s.db.Base.NewSelect().
+	exists, errExists := s.db.Base.NewSelect().
 		Model(&x).
 		Where("id = ?", id).
-		Scan(ctx)
+		Exists(ctx)
 
-	return &x, nil
+	if errExists != nil {
+		s.logger.Error(errExists)
+		return nil, errExists
+	}
+
+	if exists {
+		s.db.Base.NewSelect().
+			Model(&x).
+			Where("id = ?", id).
+			Scan(ctx)
+
+		return &x, nil
+	}
+
+	return nil, errors.New(fmt.Sprintf("record with id: %s doesn't exist", id))
 }
 
 func (s *StockRepo) InsertOne(ctx context.Context, stock *entities.Stock) error {
