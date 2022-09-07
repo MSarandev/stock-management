@@ -17,3 +17,7 @@ down:
 down-v:
 	@docker-compose down -v --remove-orphans
 	@docker-compose ps
+
+.PHONY: migrate
+migrate:
+	@go run cmd/migrator/main.go
