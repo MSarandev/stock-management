@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"stocks-api/module/entities"
 	"stocks-api/module/services"
@@ -13,6 +14,7 @@ import (
 
 type StockService interface {
 	GetAll(ctx context.Context) ([]*entities.Stock, error)
+	GetOne(ctx context.Context, stockId string) (*entities.Stock, error)
 }
 
 type StockController struct {
@@ -40,8 +42,16 @@ func (s *StockController) GetAll(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func (s *StockController) GetOne(http.ResponseWriter, *http.Request) {
-	return
+func (s *StockController) GetOne(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	res, errGet := s.service.GetOne(s.ctx, vars["id"])
+	if errGet != nil {
+		w.Write([]byte(errGet.Error()))
+		return
+	}
+
+	json.NewEncoder(w).Encode(res)
 }
 
 func (s *StockController) InsertOne(http.ResponseWriter, *http.Request) {

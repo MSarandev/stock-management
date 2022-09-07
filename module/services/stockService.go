@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"stocks-api/module/entities"
 	"stocks-api/module/repos"
@@ -11,6 +12,7 @@ import (
 
 type StockStore interface {
 	GetAll(ctx context.Context) ([]*entities.Stock, error)
+	GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, error)
 }
 
 type StockService struct {
@@ -30,4 +32,13 @@ func NewStockService(l *logrus.Logger, db *db.Instance, ctx context.Context) *St
 
 func (s *StockService) GetAll(ctx context.Context) ([]*entities.Stock, error) {
 	return s.repo.GetAll(ctx)
+}
+
+func (s *StockService) GetOne(ctx context.Context, stockId string) (*entities.Stock, error) {
+	id, errParse := uuid.Parse(stockId)
+	if errParse != nil {
+		return nil, errParse
+	}
+
+	return s.repo.GetOne(ctx, id)
 }
