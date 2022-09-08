@@ -13,11 +13,13 @@ import (
 	"stocks-api/support/db"
 )
 
+// StockRepo the repo provides low level logic operations.
 type StockRepo struct {
 	logger *logrus.Logger
 	db     *db.Instance
 }
 
+// NewStockRepo a constructor for the Stock Repo.
 func NewStockRepo(l *logrus.Logger, db *db.Instance) *StockRepo {
 	return &StockRepo{
 		logger: l,
@@ -25,6 +27,7 @@ func NewStockRepo(l *logrus.Logger, db *db.Instance) *StockRepo {
 	}
 }
 
+// GetAll returns all records from the database.
 func (s *StockRepo) GetAll(ctx context.Context) ([]*entities.Stock, error) {
 	var x []*entities.Stock
 
@@ -35,6 +38,7 @@ func (s *StockRepo) GetAll(ctx context.Context) ([]*entities.Stock, error) {
 	return x, nil
 }
 
+// GetOne returns a single record from the database, if found.
 func (s *StockRepo) GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, error) {
 	var x entities.Stock
 
@@ -60,6 +64,7 @@ func (s *StockRepo) GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, 
 	return nil, errors.New(fmt.Sprintf("record with id: %s doesn't exist", id))
 }
 
+// InsertOne adds a new record in the database.
 func (s *StockRepo) InsertOne(ctx context.Context, stock *entities.Stock) error {
 	return s.db.Base.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		_, err := tx.NewInsert().
@@ -72,6 +77,7 @@ func (s *StockRepo) InsertOne(ctx context.Context, stock *entities.Stock) error 
 	})
 }
 
+// UpdateOne updates a single record in the database, if found.
 func (s *StockRepo) UpdateOne(ctx context.Context, stock *entities.Stock) error {
 	currentRecord := entities.Stock{}
 
@@ -98,6 +104,7 @@ func (s *StockRepo) UpdateOne(ctx context.Context, stock *entities.Stock) error 
 	})
 }
 
+// DeleteOne removes a record from the database, if found.
 func (s *StockRepo) DeleteOne(ctx context.Context, id uuid.UUID) error {
 	exists, errExists := s.db.Base.NewSelect().
 		Model(new(entities.Stock)).

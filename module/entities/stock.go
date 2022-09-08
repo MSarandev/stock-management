@@ -19,8 +19,10 @@ type Stock struct {
 	UpdatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp" json:"updated_at" yaml:"updated_at"`
 }
 
+// StockItems a slice of stock entities.
 type StockItems []*Stock
 
+// BeforeAppendModel DB hooks that will be executed before a DB query.
 func (s *Stock) BeforeAppendModel(_ context.Context, query bun.Query) error {
 	switch query.(type) {
 	case *bun.InsertQuery:

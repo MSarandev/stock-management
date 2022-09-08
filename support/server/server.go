@@ -12,12 +12,14 @@ import (
 	"stocks-api/module/controllers"
 )
 
+// Serve a server instance.
 type Serve struct {
 	Server          *mux.Router
 	logger          *logrus.Logger
 	stockController *controllers.StockController
 }
 
+// NewServe a constructor for Serve.
 func NewServe(stockController *controllers.StockController, l *logrus.Logger) *Serve {
 	return &Serve{
 		Server:          mux.NewRouter(),
@@ -26,6 +28,7 @@ func NewServe(stockController *controllers.StockController, l *logrus.Logger) *S
 	}
 }
 
+// RegisterHandlers registers the routes available for our API.
 func (s *Serve) RegisterHandlers() {
 	s.Server.HandleFunc("/", s.stockController.GetAll).Methods("GET")
 	s.Server.HandleFunc("/", s.stockController.InsertOne).Methods("POST")
@@ -34,6 +37,7 @@ func (s *Serve) RegisterHandlers() {
 	s.Server.HandleFunc("/{id}", s.stockController.DeleteOne).Methods("PUT")
 }
 
+// Serve starts the server and accepts new calls.
 func (s *Serve) Serve() {
 	port := os.Getenv("SERVER_PORT")
 	address := os.Getenv("SERVER_ADDRESS")

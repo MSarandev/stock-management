@@ -16,6 +16,7 @@ import (
 	"stocks-api/support/db"
 )
 
+// OpType defines the operation type.
 type OpType string
 
 const (
@@ -23,6 +24,7 @@ const (
 	update OpType = "UPDATE"
 )
 
+// A contract to the StockService for high level logic operations.
 type StockService interface {
 	GetAll(ctx context.Context) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, stockId string) (*entities.Stock, error)
@@ -31,6 +33,7 @@ type StockService interface {
 	DeleteOne(ctx context.Context, stockId string) error
 }
 
+// StockController handles the business logic when an endpoint is hit.
 type StockController struct {
 	logger  *logrus.Logger
 	db      *db.Instance
@@ -38,6 +41,7 @@ type StockController struct {
 	ctx     context.Context
 }
 
+// NewStockController a constructor for the StockController.
 func NewStockController(l *logrus.Logger, db *db.Instance, ctx context.Context) *StockController {
 	return &StockController{
 		logger:  l,
@@ -47,6 +51,7 @@ func NewStockController(l *logrus.Logger, db *db.Instance, ctx context.Context) 
 	}
 }
 
+// GetAll returns all records in the database.
 func (s *StockController) GetAll(w http.ResponseWriter, _ *http.Request) {
 	res, errGet := s.service.GetAll(s.ctx)
 	if errGet != nil {
@@ -56,6 +61,7 @@ func (s *StockController) GetAll(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+// GetOne returns a single record in the database.
 func (s *StockController) GetOne(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -68,6 +74,7 @@ func (s *StockController) GetOne(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+// InsertOne adds a new record to the database.
 func (s *StockController) InsertOne(w http.ResponseWriter, r *http.Request) {
 	stock, errParse := reqToStock(r)
 	if errParse != nil {
@@ -93,6 +100,7 @@ func (s *StockController) InsertOne(w http.ResponseWriter, r *http.Request) {
 	m.Unlock()
 }
 
+// UpdateOne updates a single record in the database.
 func (s *StockController) UpdateOne(w http.ResponseWriter, r *http.Request) {
 	stock, errParse := reqToStock(r)
 	if errParse != nil {
@@ -120,6 +128,7 @@ func (s *StockController) UpdateOne(w http.ResponseWriter, r *http.Request) {
 	m.Unlock()
 }
 
+// DeleteOne deletes a single record in the database.
 func (s *StockController) DeleteOne(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
