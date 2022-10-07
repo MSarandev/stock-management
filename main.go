@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"stocks-api/module/controllers"
 	"stocks-api/support/db"
-	"stocks-api/support/server"
+	"stocks-api/support/http"
 )
 
 func init() {
@@ -38,8 +38,8 @@ func prepDB(l *logrus.Logger) *db.Instance {
 	return instance
 }
 
-func prepServer(l *logrus.Logger, db *db.Instance, ctx context.Context) *server.Serve {
+func prepServer(l *logrus.Logger, db *db.Instance, ctx context.Context) *http.Serve {
 	controller := controllers.NewStockController(l, db, ctx)
 
-	return server.NewServe(controller, l)
+	return http.NewServe(controller, l)
 }

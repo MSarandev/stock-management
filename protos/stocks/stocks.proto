@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+option go_package = "github.com/MSarandev/stock-management/protos/stocks";
+
+package stocks;
+
+import "protos/stocks/common.proto";
+
+// StockService handles all stock operations (CRUD).
+service StockService {
+  // GetStock returns a single stock item, by id.
+  rpc GetStock(GetStockRequest) returns (GetStockResponse);
+
+  // ListStocks returns a list of all stock items in the db.
+  rpc ListStocks(ListStocksRequest) returns (ListStocksResponse);
+
+  // CreateStock creates a single new stock item.
+  rpc CreateStock(CreateStockRequest) returns (CreateStockResponse);
+
+  // EditStock edits a single stock item.
+  rpc EditStock(EditStockRequest) returns (EditStockResponse);
+
+  // DeleteStock removes a single stock item by id.
+  rpc DeleteStock(DeleteStockRequest) returns (DeleteStockResponse);
+}
+
+// GetStockRequest is the request definition.
+message GetStockRequest {
+  string id = 1;
+}
+
+// GetStockResponse is the response definition.
+message GetStockResponse {
+  common.SingleStock stock = 1;
+}
+
+// ListStocksRequest is the request definition.
+message ListStocksRequest {}
+
+// ListStocksResponse is the response definition.
+message ListStocksResponse {
+  repeated common.SingleStock stocks = 1;
+}
+
+// CreateStockRequest is the request definition.
+message CreateStockRequest {
+  common.NewStock stock = 1;
+}
+
+// CreateStockResponse is the response definition.
+message CreateStockResponse {}
+
+// EditStockRequest is the request definition.
+message EditStockRequest {
+  common.EditableStock stock = 1;
+}
+
+// EditStockResponse is the response definition.
+message EditStockResponse {}
+
+// DeleteStockRequest is the request definition.
+message DeleteStockRequest {
+  string id = 1;
+}
+
+// DeleteStockResponse is the response definition.
+message DeleteStockResponse {}

@@ -6,6 +6,7 @@ Basic stock management (CRUD/REST)
 2. Env file generation - `make init`
 3. Containers stater - `make start`
 4. Migrations - `make migrate`
+5. gRPC protos generation - `make pb-generate`
 
 On UNIX systems simply run `./stocks-api`
 

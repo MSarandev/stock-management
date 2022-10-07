@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "github.com/MSarandev/stock-management/protos/common";
+
+package common;
+
+import "google/protobuf/timestamp.proto";
+
+// SingleStock represents a single stock item.
+message SingleStock {
+  string id = 1;
+  string name = 2;
+  int64 quantity = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// EditableStock represents an editable/creatable stock item.
+message EditableStock {
+  string id = 1;
+  string name = 2;
+  int64 quantity = 3;
+}
+
+// NewStock represents an creatable stock item.
+message NewStock {
+  string name = 1;
+  int64 quantity = 2;
+}
