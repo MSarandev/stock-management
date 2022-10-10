@@ -48,7 +48,7 @@ func (s *Serve) Serve() {
 	s.RegisterHandlers()
 	s.Server.Use(s.loggingMiddleware)
 
-	s.logger.Info(fmt.Sprintf("Serving on: %s:%s", address, port))
+	s.logger.Info(fmt.Sprintf("Serving HTTP on: %s:%s", address, port))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), s.Server))
 }
 

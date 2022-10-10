@@ -4,7 +4,7 @@ option go_package = "github.com/MSarandev/stock-management/protos/stocks";
 
 package stocks;
 
-import "protos/stocks/common.proto";
+import "google/protobuf/timestamp.proto";
 
 // StockService handles all stock operations (CRUD).
 service StockService {
@@ -31,7 +31,7 @@ message GetStockRequest {
 
 // GetStockResponse is the response definition.
 message GetStockResponse {
-  common.SingleStock stock = 1;
+  SingleStock stock = 1;
 }
 
 // ListStocksRequest is the request definition.
@@ -39,12 +39,12 @@ message ListStocksRequest {}
 
 // ListStocksResponse is the response definition.
 message ListStocksResponse {
-  repeated common.SingleStock stocks = 1;
+  repeated SingleStock stocks = 1;
 }
 
 // CreateStockRequest is the request definition.
 message CreateStockRequest {
-  common.NewStock stock = 1;
+  NewStock stock = 1;
 }
 
 // CreateStockResponse is the response definition.
@@ -52,7 +52,7 @@ message CreateStockResponse {}
 
 // EditStockRequest is the request definition.
 message EditStockRequest {
-  common.EditableStock stock = 1;
+  EditableStock stock = 1;
 }
 
 // EditStockResponse is the response definition.
@@ -65,3 +65,25 @@ message DeleteStockRequest {
 
 // DeleteStockResponse is the response definition.
 message DeleteStockResponse {}
+
+// SingleStock represents a single stock item.
+message SingleStock {
+  string id = 1;
+  string name = 2;
+  int64 quantity = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// EditableStock represents an editable/creatable stock item.
+message EditableStock {
+  string id = 1;
+  string name = 2;
+  int64 quantity = 3;
+}
+
+// NewStock represents an creatable stock item.
+message NewStock {
+  string name = 1;
+  int64 quantity = 2;
+}

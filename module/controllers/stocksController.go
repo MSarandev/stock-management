@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"stocks-api/module/entities"
 	"stocks-api/module/services"
+	"stocks-api/module/validators"
 	"stocks-api/support/db"
 )
 
@@ -142,14 +143,14 @@ func validate(input *entities.Stock, op OpType) error {
 	vl := val.New()
 
 	if op == insert {
-		return vl.Struct(InsertStock{
+		return vl.Struct(validators.InsertStock{
 			ID:   input.ID.String(),
 			Name: input.Name,
 		})
 	}
 
 	if op == update {
-		return vl.Struct(UpdateStock{
+		return vl.Struct(validators.UpdateStock{
 			Name:     input.Name,
 			Quantity: int(input.Quantity),
 		})
