@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"sync"
 
 	val "github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -89,16 +88,10 @@ func (s *StockController) InsertOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var m sync.Mutex
-	m.Lock()
-
 	if err := s.service.InsertOne(s.ctx, stock); err != nil {
 		w.Write([]byte(err.Error()))
-		m.Unlock()
 		return
 	}
-
-	m.Unlock()
 }
 
 // UpdateOne updates a single record in the database.
@@ -117,16 +110,10 @@ func (s *StockController) UpdateOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var m sync.Mutex
-	m.Lock()
-
 	if err := s.service.UpdateOne(s.ctx, stock, vars["id"]); err != nil {
 		w.Write([]byte(err.Error()))
-		m.Unlock()
 		return
 	}
-
-	m.Unlock()
 }
 
 // DeleteOne deletes a single record in the database.

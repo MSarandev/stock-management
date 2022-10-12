@@ -32,6 +32,7 @@ func (s *StockRepo) GetAll(ctx context.Context) ([]*entities.Stock, error) {
 	var x []*entities.Stock
 
 	s.db.Base.NewSelect().
+		For("SHARE").
 		Model(new(entities.Stock)).
 		Scan(ctx, &x)
 
@@ -43,6 +44,7 @@ func (s *StockRepo) GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, 
 	var x entities.Stock
 
 	exists, errExists := s.db.Base.NewSelect().
+		For("SHARE").
 		Model(&x).
 		Where("id = ?", id).
 		Exists(ctx)
@@ -54,6 +56,7 @@ func (s *StockRepo) GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, 
 
 	if exists {
 		s.db.Base.NewSelect().
+			For("SHARE").
 			Model(&x).
 			Where("id = ?", id).
 			Scan(ctx)
@@ -82,6 +85,7 @@ func (s *StockRepo) UpdateOne(ctx context.Context, stock *entities.Stock) error 
 	currentRecord := entities.Stock{}
 
 	errExists := s.db.Base.NewSelect().
+		For("UPDATE").
 		Model(stock).
 		Where("id = ?", stock.ID).
 		Scan(ctx, &currentRecord)
@@ -107,6 +111,7 @@ func (s *StockRepo) UpdateOne(ctx context.Context, stock *entities.Stock) error 
 // DeleteOne removes a record from the database, if found.
 func (s *StockRepo) DeleteOne(ctx context.Context, id uuid.UUID) error {
 	exists, errExists := s.db.Base.NewSelect().
+		For("UPDATE").
 		Model(new(entities.Stock)).
 		Where("id = ?", id).
 		Exists(ctx)
