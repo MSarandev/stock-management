@@ -72,12 +72,9 @@ func (s *StockHandler) CreateStock(ctx context.Context, request *pb.CreateStockR
 		return nil, errors.New("Failed to create stock")
 	}
 
-	stock := entities.Stock{
-		Name:     request.GetStock().GetName(),
-		Quantity: request.GetStock().GetQuantity(),
-	}
+	stock := fromCreatePb(request)
 
-	if err := s.service.InsertOne(ctx, &stock); err != nil {
+	if err := s.service.InsertOne(ctx, stock); err != nil {
 		return nil, err
 	}
 
@@ -90,12 +87,9 @@ func (s *StockHandler) EditStock(ctx context.Context, request *pb.EditStockReque
 		return nil, errors.New("Failed to update stock")
 	}
 
-	stock := entities.Stock{
-		Name:     request.GetStock().GetName(),
-		Quantity: request.GetStock().GetQuantity(),
-	}
+	stock := fromEditPb(request)
 
-	if err := s.service.UpdateOne(ctx, &stock, request.GetStock().GetId()); err != nil {
+	if err := s.service.UpdateOne(ctx, stock, request.GetStock().GetId()); err != nil {
 		return nil, errors.New("Failed to update stock")
 	}
 

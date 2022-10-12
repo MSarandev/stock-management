@@ -31,3 +31,17 @@ func toStockListPb(stocks []*entities.Stock) []*pb.SingleStock {
 
 	return response
 }
+
+func fromCreatePb(req *pb.CreateStockRequest) *entities.Stock {
+	return &entities.Stock{
+		Name:     req.GetStock().GetName(),
+		Quantity: req.GetStock().GetQuantity(),
+	}
+}
+
+func fromEditPb(req *pb.EditStockRequest) *entities.Stock {
+	return &entities.Stock{
+		Name:     req.GetStock().GetName(),
+		Quantity: req.GetStock().GetQuantity(),
+	}
+}
