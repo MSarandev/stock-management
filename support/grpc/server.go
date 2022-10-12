@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -18,15 +19,23 @@ type Serve struct {
 	logger  *logrus.Logger
 	opts    *[]grpc.ServerOption
 	handler *handlers.StockHandler
+	wg      *sync.WaitGroup
 }
 
 // NewServe is a wrapper constructor.
-func NewServe(p int64, l *logrus.Logger, opts *[]grpc.ServerOption, handler *handlers.StockHandler) *Serve {
+func NewServe(
+	p int64,
+	l *logrus.Logger,
+	opts *[]grpc.ServerOption,
+	handler *handlers.StockHandler,
+	wg *sync.WaitGroup,
+) *Serve {
 	return &Serve{
 		port:    p,
 		logger:  l,
 		opts:    opts,
 		handler: handler,
+		wg:      wg,
 	}
 }
 
@@ -44,4 +53,6 @@ func (s *Serve) Serve() {
 
 	s.logger.Info(fmt.Sprintf("Serving gRPC on: %d", s.port))
 	grpcServer.Serve(lis)
+
+	defer s.wg.Done()
 }

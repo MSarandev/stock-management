@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -28,17 +29,22 @@ func main() {
 
 	ctx := context.Background()
 
-	db := prepDB(logger)
-	s := prepServer(logger, db, ctx)
+	wg := &sync.WaitGroup{}
 
-	g, err := prepGrpc(logger, db, ctx)
+	db := prepDB(logger)
+	s := prepServer(logger, db, ctx, wg)
+
+	g, err := prepGrpc(logger, db, ctx, wg)
 	if err != nil {
 		logger.Warningf("gRPC server failed to start: %s", err)
 	}
 
-	// TODO: make these run simultaneously
-	s.Serve()
-	g.Serve()
+	wg.Add(2)
+
+	go s.Serve()
+	go g.Serve()
+
+	wg.Wait()
 }
 
 // prepDB prepare the database.
@@ -55,14 +61,14 @@ func prepDB(l *logrus.Logger) *db.Instance {
 }
 
 // prepServer prepare the HTTP server.
-func prepServer(l *logrus.Logger, db *db.Instance, ctx context.Context) *http.Serve {
+func prepServer(l *logrus.Logger, db *db.Instance, ctx context.Context, wg *sync.WaitGroup) *http.Serve {
 	controller := controllers.NewStockController(l, db, ctx)
 
-	return http.NewServe(controller, l)
+	return http.NewServe(controller, l, wg)
 }
 
 // prepGrpc prepare the gRPC server.
-func prepGrpc(l *logrus.Logger, db *db.Instance, ctx context.Context) (*grpc.Serve, error) {
+func prepGrpc(l *logrus.Logger, db *db.Instance, ctx context.Context, wg *sync.WaitGroup) (*grpc.Serve, error) {
 	sPort, ok := os.LookupEnv("GRPC_PORT")
 	if !ok {
 		return nil, errors.New("failed to start gRPC server, missing port")
@@ -78,5 +84,5 @@ func prepGrpc(l *logrus.Logger, db *db.Instance, ctx context.Context) (*grpc.Ser
 	opts := []rpc.ServerOption{}
 	handler := handlers.NewStockHandler(l, db, ctx)
 
-	return grpc.NewServe(int64(port), l, &opts, handler), nil
+	return grpc.NewServe(int64(port), l, &opts, handler, wg), nil
 }

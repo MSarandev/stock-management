@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -17,14 +18,16 @@ type Serve struct {
 	Server          *mux.Router
 	logger          *logrus.Logger
 	stockController *controllers.StockController
+	wg              *sync.WaitGroup
 }
 
 // NewServe a constructor for Serve.
-func NewServe(stockController *controllers.StockController, l *logrus.Logger) *Serve {
+func NewServe(stockController *controllers.StockController, l *logrus.Logger, wg *sync.WaitGroup) *Serve {
 	return &Serve{
 		Server:          mux.NewRouter(),
 		logger:          l,
 		stockController: stockController,
+		wg:              wg,
 	}
 }
 
@@ -50,6 +53,8 @@ func (s *Serve) Serve() {
 
 	s.logger.Info(fmt.Sprintf("Serving HTTP on: %s:%s", address, port))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), s.Server))
+
+	defer s.wg.Done()
 }
 
 func (s *Serve) loggingMiddleware(next http.Handler) http.Handler {
