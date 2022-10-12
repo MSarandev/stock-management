@@ -11,7 +11,19 @@ Basic stock management (CRUD/REST)
 On UNIX systems simply run `./stocks-api`
 
 # Endpoints
-## [GET] localhost:9988
+The project runs an HTTP and a gRPC server simultaneously. By default, the HTTP server is running on `9988`, and the 
+gRPC is on `9999` <br>
+Both servers implement the same endpoints, You should find: <br>
+1. Get single stock
+2. List all stocks
+3. Edit a stock
+4. Delete a stock
+
+## gRPC
+<b>To be added <b>
+
+## HTTP
+### [GET] localhost:9988
 Returns all entries in the db. <br> 
 Example:
 ```json
@@ -47,7 +59,7 @@ Example:
 ]
 ```
 
-## [GET] localhost:9988/{id}
+### [GET] localhost:9988/{id}
 Returns the specific record, or returns a validation error <br>
 Example:
 ```json
@@ -65,7 +77,7 @@ Validation error:
 record with id: 00000000-0000-0000-0000-000000000000 doesn't exist
 ```
 
-## [POST] localhost:9988
+### [POST] localhost:9988
 Inserts a record, accepts JSON body <br>
 Request body example:
 ```json
@@ -81,7 +93,7 @@ Validation error example:
 Key: 'InsertStock.ID' Error:Field validation for 'ID' failed on the 'uuid4' tag
 ```
 
-## [POST] localhost:9988/{id}
+### [POST] localhost:9988/{id}
 Updates the given record, accepts JSON body
 Request body example:
 ```json
@@ -98,7 +110,7 @@ Validation error example:
 Input quantity is less than 0
 ```
 
-## [PUT] localhost:9988/{id}
+### [PUT] localhost:9988/{id}
 Deletes a record. <br>
 Validation error example:
 ```text
