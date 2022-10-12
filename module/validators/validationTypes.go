@@ -2,8 +2,9 @@ package validators
 
 // InsertStock a custom validation struct for the insertion fields.
 type InsertStock struct {
-	ID   string `validate:"" json:"id"`
-	Name string `validate:"required,alphanumunicode" json:"name"`
+	ID       string `validate:"" json:"id"`
+	Name     string `validate:"required,alphanumunicode" json:"name"`
+	Quantity int    `validate:"required,numeric" json:"quantity"`
 }
 
 // UpdateStock a custom validation struct for the update fields.

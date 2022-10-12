@@ -97,6 +97,8 @@ func (s *StockRepo) UpdateOne(ctx context.Context, stock *entities.Stock) error 
 	return s.db.Base.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		stock.CreatedAt = currentRecord.CreatedAt
 
+		// TODO: handle "dirty" values !
+
 		_, err := tx.NewUpdate().
 			Model(stock).
 			WherePK().

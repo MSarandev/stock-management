@@ -66,18 +66,69 @@ func (s *StockHandler) ListStocks(ctx context.Context, _ *pb.ListStocksRequest) 
 	}, nil
 }
 
+// CreateStock creates a new stock item
+func (s *StockHandler) CreateStock(ctx context.Context, request *pb.CreateStockRequest) (*pb.CreateStockResponse, error) {
+	if err := validateCreate(request); err != nil {
+		return nil, errors.New("Failed to create stock")
+	}
+
+	stock := entities.Stock{
+		Name:     request.GetStock().GetName(),
+		Quantity: request.GetStock().GetQuantity(),
+	}
+
+	if err := s.service.InsertOne(ctx, &stock); err != nil {
+		return nil, err
+	}
+
+	return &pb.CreateStockResponse{}, nil
+}
+
+// EditStock modifies an existing stock item
+func (s *StockHandler) EditStock(ctx context.Context, request *pb.EditStockRequest) (*pb.EditStockResponse, error) {
+	if err := validateUpdate(request); err != nil {
+		return nil, errors.New("Failed to update stock")
+	}
+
+	stock := entities.Stock{
+		Name:     request.GetStock().GetName(),
+		Quantity: request.GetStock().GetQuantity(),
+	}
+
+	if err := s.service.UpdateOne(ctx, &stock, request.GetStock().GetId()); err != nil {
+		return nil, errors.New("Failed to update stock")
+	}
+
+	return &pb.EditStockResponse{}, nil
+}
+
+// DeleteStock removes a given stock item.
+func (s *StockHandler) DeleteStock(ctx context.Context, request *pb.DeleteStockRequest) (*pb.DeleteStockResponse, error) {
+	if request.GetId() == "" {
+		return nil, errors.New("StockID is required")
+	}
+
+	if err := s.service.DeleteOne(ctx, request.GetId()); err != nil {
+		return nil, err
+	}
+
+	return &pb.DeleteStockResponse{}, nil
+}
+
 func validateGet(r *pb.GetStockRequest) error {
 	return val.New().Struct(validators.GetStock{ID: r.GetId()})
 }
 
-//func (s *StockHandler) CreateStock(ctx context.Context, request *pb.CreateStockRequest) (*pb.CreateStockResponse, error) {
-//	panic("implement me")
-//}
-//
-//func (s *StockHandler) EditStock(ctx context.Context, request *pb.EditStockRequest) (*pb.EditStockResponse, error) {
-//	panic("implement me")
-//}
-//
-//func (s *StockHandler) DeleteStock(ctx context.Context, request *pb.DeleteStockRequest) (*pb.DeleteStockResponse, error) {
-//	panic("implement me")
-//}
+func validateCreate(r *pb.CreateStockRequest) error {
+	return val.New().Struct(validators.InsertStock{
+		Name:     r.GetStock().GetName(),
+		Quantity: int(r.GetStock().GetQuantity()),
+	})
+}
+
+func validateUpdate(r *pb.EditStockRequest) error {
+	return val.New().Struct(validators.UpdateStock{
+		Name:     r.GetStock().GetName(),
+		Quantity: int(r.GetStock().GetQuantity()),
+	})
+}
