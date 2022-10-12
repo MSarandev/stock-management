@@ -54,14 +54,22 @@ func (s *StockHandler) GetStock(ctx context.Context, request *pb.GetStockRequest
 	}, nil
 }
 
+// ListStocks lists all stocks available in the db.
+func (s *StockHandler) ListStocks(ctx context.Context, _ *pb.ListStocksRequest) (*pb.ListStocksResponse, error) {
+	stocks, err := s.service.GetAll(ctx)
+	if err != nil {
+		return nil, errors.New("Failed to list stocks")
+	}
+
+	return &pb.ListStocksResponse{
+		Stocks: toStockListPb(stocks),
+	}, nil
+}
+
 func validateGet(r *pb.GetStockRequest) error {
 	return val.New().Struct(validators.GetStock{ID: r.GetId()})
 }
 
-//func (s *StockHandler) ListStocks(ctx context.Context, request *pb.ListStocksRequest) (*pb.ListStocksResponse, error) {
-//	panic("implement me")
-//}
-//
 //func (s *StockHandler) CreateStock(ctx context.Context, request *pb.CreateStockRequest) (*pb.CreateStockResponse, error) {
 //	panic("implement me")
 //}

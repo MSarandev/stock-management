@@ -21,3 +21,13 @@ func toStockPb(stock *entities.Stock) *pb.SingleStock {
 		},
 	}
 }
+
+func toStockListPb(stocks []*entities.Stock) []*pb.SingleStock {
+	response := make([]*pb.SingleStock, 0, len(stocks))
+
+	for _, s := range stocks {
+		response = append(response, toStockPb(s))
+	}
+
+	return response
+}
