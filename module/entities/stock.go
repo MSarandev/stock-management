@@ -26,6 +26,10 @@ type StockItems []*Stock
 func (s *Stock) BeforeAppendModel(_ context.Context, query bun.Query) error {
 	switch query.(type) {
 	case *bun.InsertQuery:
+		if s.ID == uuid.Nil {
+			s.ID = uuid.New()
+		}
+
 		s.CreatedAt = time.Now()
 	case *bun.UpdateQuery:
 		s.UpdatedAt = time.Now()
