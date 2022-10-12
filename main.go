@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	rpc "google.golang.org/grpc"
@@ -81,7 +82,13 @@ func prepGrpc(l *logrus.Logger, db *db.Instance, ctx context.Context, wg *sync.W
 		return nil, errors.New("failed to start gRPC server, faulty port")
 	}
 
-	opts := []rpc.ServerOption{}
+	logEntry := logrus.NewEntry(l)
+
+	opts := []rpc.ServerOption{
+		rpc.StreamInterceptor(grpc_logrus.StreamServerInterceptor(logEntry)),
+		rpc.UnaryInterceptor(grpc_logrus.UnaryServerInterceptor(logEntry)),
+	}
+
 	handler := handlers.NewStockHandler(l, db, ctx)
 
 	return grpc.NewServe(int64(port), l, &opts, handler, wg), nil
