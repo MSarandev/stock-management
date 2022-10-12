@@ -6,10 +6,10 @@ import (
 
 	val "github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
+	pb "stocks-api/genprotos"
 	"stocks-api/module/entities"
 	"stocks-api/module/services"
 	"stocks-api/module/validators"
-	pb "stocks-api/protos/protos/stocks"
 	"stocks-api/support/db"
 )
 

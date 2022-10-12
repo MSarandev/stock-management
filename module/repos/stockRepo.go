@@ -32,7 +32,6 @@ func (s *StockRepo) GetAll(ctx context.Context) ([]*entities.Stock, error) {
 	var x []*entities.Stock
 
 	s.db.Base.NewSelect().
-		For("SHARE").
 		Model(new(entities.Stock)).
 		Scan(ctx, &x)
 
@@ -44,7 +43,6 @@ func (s *StockRepo) GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, 
 	var x entities.Stock
 
 	exists, errExists := s.db.Base.NewSelect().
-		For("SHARE").
 		Model(&x).
 		Where("id = ?", id).
 		Exists(ctx)

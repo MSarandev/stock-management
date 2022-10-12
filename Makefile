@@ -28,6 +28,6 @@ rollback:
 
 .PHONY: pb-generate
 pb-generate:
-	@protoc --go_out=protos --go_opt=paths=source_relative \
-         --go-grpc_out=protos --go-grpc_opt=paths=source_relative \
-         protos/stocks/*
+	@protoc --proto_path=protob "protob/stocks.proto"\
+		 --go_out=genprotos --go_opt=paths=source_relative \
+         --go-grpc_out=genprotos --go-grpc_opt=paths=source_relative

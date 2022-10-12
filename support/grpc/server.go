@@ -9,8 +9,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	pb "stocks-api/genprotos"
 	"stocks-api/module/handlers"
-	pb "stocks-api/protos/protos/stocks"
 )
 
 // Serve is the gRPC serve wrapper.

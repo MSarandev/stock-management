@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"google.golang.org/protobuf/types/known/timestamppb"
+	pb "stocks-api/genprotos"
 	"stocks-api/module/entities"
-	pb "stocks-api/protos/protos/stocks"
 )
 
 func toStockPb(stock *entities.Stock) *pb.SingleStock {
