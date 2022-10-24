@@ -1,16 +1,40 @@
 version: '3'
 services:
   db:
+    container_name: db
     image: postgres:14.1
     command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
     restart: always
     volumes:
       - ./docker/db/init.sh:/docker-entrypoint-initdb.d/init.sh
-      - ./docker/db/store:/var/lib/postgresql/data
+      - ./docker/db/main/store:/var/lib/postgresql/data
     ports:
       - 5632:5432
     networks:
       - stock_api_internal
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+
+  db_test:
+    container_name: db_test
+    image: postgres:14.1
+    command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
+    restart: always
+    volumes:
+      - ./docker/db/init.sh:/docker-entrypoint-initdb.d/init.sh
+      - ./docker/db/test/store:/var/lib/postgresql/data
+    ports:
+      - 5633:5432
+    networks:
+      - stock_api_internal
+    env_file:
+      - .env.test
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

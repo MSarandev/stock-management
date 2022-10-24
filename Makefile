@@ -2,7 +2,8 @@
 
 .PHONY: init
 init:
-	@cp .env.dist .env
+	@cp .env.dist .env && \
+	cp .env.test.dist .env.test
 
 .PHONY: start
 start:

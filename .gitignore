@@ -2,3 +2,4 @@
 /.env
 /logs.txt
 /.idea
+/.env.test

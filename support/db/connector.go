@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,38 +13,37 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 )
 
-func generateDsn() (string, error) {
-	host, ok := os.LookupEnv("DB_HOST")
+type dbConn struct {
+	Host   string `json:"host"`
+	Port   int    `json:"port"`
+	User   string `json:"user"`
+	Pass   string `json:"pass"`
+	DbName string `json:"db_name"`
+}
+
+func generateDsn(envKey string) (string, error) {
+	envDb, ok := os.LookupEnv(envKey)
 	if !ok {
-		return "", errors.New("failed to load env param")
+		return "", errors.New("failed to load DB env param")
 	}
 
-	port, ok := os.LookupEnv("DB_PORT")
-	if !ok {
-		return "", errors.New("failed to load env param")
+	db := dbConn{}
+	if err := json.Unmarshal([]byte(envDb), &db); err != nil {
+		return "", err
 	}
 
-	user, ok := os.LookupEnv("DB_USER")
-	if !ok {
-		return "", errors.New("failed to load env param")
-	}
-
-	pass, ok := os.LookupEnv("DB_PASS")
-	if !ok {
-		return "", errors.New("failed to load env param")
-	}
-
-	database, ok := os.LookupEnv("DB_NAME")
-	if !ok {
-		return "", errors.New("failed to load env param")
-	}
-
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, pass, host, port, database), nil
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		db.User,
+		db.Pass,
+		db.Host,
+		db.Port,
+		db.DbName,
+	), nil
 }
 
 // NewConnection - initialises a db connection.
 func NewConnection() (*bun.DB, error) {
-	dsn, err := generateDsn()
+	dsn, err := generateDsn("DB")
 	if err != nil {
 		return nil, err
 	}
