@@ -20,7 +20,7 @@ Both servers implement the same endpoints, You should find: <br>
 4. Delete a stock
 
 ## gRPC
-<b>To be added <b>
+Maps the HTTP endpoints 1:1. Check that section for more info
 
 ## HTTP
 ### [GET] localhost:9988
