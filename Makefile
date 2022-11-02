@@ -23,9 +23,13 @@ down-v:
 migrations-generate:
 	@go run cmd/migrator/main.go generate --name=${name}
 
-#.PHONY: rollback
-#rollback:
-#	@go run cmd/migrator/main.go rollback
+.PHONY: migrations-apply
+migrations-apply:
+	@go run cmd/migrator/main.go migrate
+
+.PHONY: migrations-rollback
+migrations-rollback:
+	@go run cmd/migrator/main.go rollback
 
 .PHONY: pb-generate
 pb-generate:

@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/uptrace/bun/migrate"
+	migrations2 "stocks-api/migrations"
 	"stocks-api/support/db"
 )
 
@@ -44,24 +45,45 @@ func main() {
 	rootCmd.Execute()
 }
 
-func functionsRegistrar() [4]fnFlags {
+func functionsRegistrar() [5]fnFlags {
 	ctx := context.Background()
 
+	init := &cobra.Command{
+		Use:   "init",
+		Short: "Initialises the bun_migration tables",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			migrator, err := spinUpDb()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return migrator.Init(ctx)
+		},
+	}
+
 	migrate := &cobra.Command{
-		// TODO: implement this
 		Use:   "migrate",
 		Short: "Migrate applies migrations",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("In migrate")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			migrator, err := spinUpDb()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return migrator.Migrate(ctx)
 		},
 	}
 
 	rollback := &cobra.Command{
-		// TODO: implement this
 		Use:   "rollback",
 		Short: "Rollback handles rollbacks",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("In rollback")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			migrator, err := spinUpDb()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return migrator.Rollback(ctx)
 		},
 	}
 
@@ -80,7 +102,7 @@ func functionsRegistrar() [4]fnFlags {
 				return errors.WithStack(err)
 			}
 
-			return migrator.GenerateMigration(ctx, name)
+			return migrator.GenerateMigrations(ctx, name)
 		},
 	}
 
@@ -93,27 +115,12 @@ func functionsRegistrar() [4]fnFlags {
 		},
 	}
 
-	return [4]fnFlags{
-		{
-			fn:    generate,
-			flag:  _generateFlag,
-			usage: "generation name",
-		},
-		{
-			fn:    migrate,
-			flag:  "",
-			usage: "",
-		},
-		{
-			fn:    status,
-			flag:  "",
-			usage: "",
-		},
-		{
-			fn:    rollback,
-			flag:  "",
-			usage: "",
-		},
+	return [5]fnFlags{
+		{fn: init},
+		{fn: generate, flag: _generateFlag, usage: "generation name"},
+		{fn: migrate},
+		{fn: status},
+		{fn: rollback},
 	}
 }
 
@@ -128,10 +135,10 @@ func spinUpDb() (*db.Migrator, error) {
 	instance := db.NewInstance(conn, logger)
 	logger.Log(logrus.InfoLevel, "DB conn: ", instance.Health())
 
-	migrator := migrate.NewMigrator(
-		instance.Base,
-		migrate.NewMigrations(migrate.WithMigrationsDirectory("migrations")),
-	)
+	migrations := migrate.NewMigrations(migrate.WithMigrationsDirectory("migrations"))
+	migrations.Discover(migrations2.MigrationFilesScan())
+
+	migrator := migrate.NewMigrator(instance.Base, migrations)
 
 	return db.NewMigrator(logger, instance, migrator), nil
 }
