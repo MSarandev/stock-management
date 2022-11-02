@@ -4,46 +4,35 @@ import (
 	"context"
 
 	"github.com/sirupsen/logrus"
+	"github.com/uptrace/bun/migrate"
 )
 
 // Migrator handles everything migration related.
 type Migrator struct {
-	logger     *logrus.Logger
-	dbInstance *Instance
+	logger      *logrus.Logger
+	dbInstance  *Instance
+	bunMigrator *migrate.Migrator
 }
 
 // NewMigrator migrator constructor.
-func NewMigrator(logger *logrus.Logger, db *Instance) *Migrator {
+func NewMigrator(logger *logrus.Logger, db *Instance, migrator *migrate.Migrator) *Migrator {
 	return &Migrator{
-		logger:     logger,
-		dbInstance: db,
+		logger:      logger,
+		dbInstance:  db,
+		bunMigrator: migrator,
 	}
 }
 
-// MigrateOne migrates a single model.
-func (m *Migrator) MigrateOne(ctx context.Context, model interface{}, modelFlag string) error {
-	m.logger.Infof("Starting migration for: %s", modelFlag)
-
-	_, err := m.dbInstance.Base.NewCreateTable().Model(model).Exec(ctx)
+// GenerateMigration generates SQL based migration files.
+func (m *Migrator) GenerateMigration(ctx context.Context, name string) error {
+	files, err := m.bunMigrator.CreateSQLMigrations(ctx, name)
 	if err != nil {
-		m.logger.Error(err)
 		return err
 	}
 
-	m.logger.Infof("Migration successful for: %s", modelFlag)
-	return nil
-}
-
-// RollbackOne rollback a single model
-func (m *Migrator) RollbackOne(ctx context.Context, model interface{}, modelFlag string) error {
-	m.logger.Infof("Starting rollback for: %s", modelFlag)
-
-	_, err := m.dbInstance.Base.NewDropTable().Model(model).Exec(ctx)
-	if err != nil {
-		m.logger.Error(err)
-		return err
+	for _, f := range files {
+		m.logger.Infof("Generated migration file: %s, at: %s", f.Name, f.Path)
 	}
 
-	m.logger.Infof("Rollback successful for: %s", modelFlag)
 	return nil
 }
