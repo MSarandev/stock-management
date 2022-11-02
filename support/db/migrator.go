@@ -3,47 +3,72 @@ package db
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/uptrace/bun/migrate"
 )
 
 // Migrator handles everything migration related.
 type Migrator struct {
-	logger     *logrus.Logger
-	dbInstance *Instance
+	logger      *logrus.Logger
+	dbInstance  *Instance
+	bunMigrator *migrate.Migrator
 }
 
 // NewMigrator migrator constructor.
-func NewMigrator(logger *logrus.Logger, db *Instance) *Migrator {
+func NewMigrator(logger *logrus.Logger, db *Instance, migrator *migrate.Migrator) *Migrator {
 	return &Migrator{
-		logger:     logger,
-		dbInstance: db,
+		logger:      logger,
+		dbInstance:  db,
+		bunMigrator: migrator,
 	}
 }
 
-// MigrateOne migrates a single model.
-func (m *Migrator) MigrateOne(ctx context.Context, model interface{}, modelFlag string) error {
-	m.logger.Infof("Starting migration for: %s", modelFlag)
+// Init initialises bun's migration tables.
+func (m *Migrator) Init(ctx context.Context) error {
+	return m.bunMigrator.Init(ctx)
+}
 
-	_, err := m.dbInstance.Base.NewCreateTable().Model(model).Exec(ctx)
+// GenerateMigrations generates SQL based migration files.
+func (m *Migrator) GenerateMigrations(ctx context.Context, name string) error {
+	files, err := m.bunMigrator.CreateSQLMigrations(ctx, name)
 	if err != nil {
-		m.logger.Error(err)
-		return err
+		return errors.WithStack(err)
 	}
 
-	m.logger.Infof("Migration successful for: %s", modelFlag)
+	for _, f := range files {
+		m.logger.Infof("Generated migration file: %s \t at: %s", f.Name, f.Path)
+	}
+
 	return nil
 }
 
-// RollbackOne rollback a single model
-func (m *Migrator) RollbackOne(ctx context.Context, model interface{}, modelFlag string) error {
-	m.logger.Infof("Starting rollback for: %s", modelFlag)
-
-	_, err := m.dbInstance.Base.NewDropTable().Model(model).Exec(ctx)
+// Migrate migrates all new tables.
+func (m *Migrator) Migrate(ctx context.Context) error {
+	group, err := m.bunMigrator.Migrate(ctx)
 	if err != nil {
 		m.logger.Error(err)
-		return err
+		return errors.WithStack(err)
 	}
 
-	m.logger.Infof("Rollback successful for: %s", modelFlag)
+	if group.ID == 0 {
+		m.logger.Info("No new migrations to run")
+	}
+
+	return nil
+}
+
+// Rollback rolls-back the last migration group.
+func (m *Migrator) Rollback(ctx context.Context) error {
+	group, err := m.bunMigrator.Rollback(ctx)
+	if err != nil {
+		m.logger.Error(err)
+		return errors.WithStack(err)
+	}
+
+	if group.ID == 0 {
+		m.logger.Info("Nothing to rollback")
+	}
+
 	return nil
 }

@@ -19,12 +19,20 @@ down-v:
 	@docker-compose down -v --remove-orphans
 	@docker-compose ps
 
-.PHONY: migrate
-migrate:
+.PHONY: migrations-init
+migrations-init:
+	@go run cmd/migrator/main.go init
+
+.PHONY: migrations-generate
+migrations-generate:
+	@go run cmd/migrator/main.go generate --name=${name}
+
+.PHONY: migrations-apply
+migrations-apply:
 	@go run cmd/migrator/main.go migrate
 
-.PHONY: rollback
-rollback:
+.PHONY: migrations-rollback
+migrations-rollback:
 	@go run cmd/migrator/main.go rollback
 
 .PHONY: pb-generate

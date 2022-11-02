@@ -5,10 +5,21 @@ Basic stock management (CRUD/REST)
 1. Network declaration - `docker network create stock_api_internal`
 2. Env file generation - `make init`
 3. Containers stater - `make start`
-4. Migrations - `make migrate`
+4. Migrations - `make migrations-init && make migrations-apply`
 5. gRPC protos generation - `make pb-generate`
 
 On UNIX systems simply run `./stocks-api`
+
+# Migrations
+Migrations are handled via bun. There are several commands pre-built for this op:
+```text
+1. make migrations-init 	- creates the migration locks tables (bun specific)
+2. make migrations-apply 	- applies all migrations that are present in the /migrations dir
+3. make migrations-rollback 	- performs a rollback on the last migrated group 
+4. make migrations-generate 	- generates an .up.sql and .down.sql files for new migrations
+```
+More info here: https://bun.uptrace.dev/guide/migrations.html#sql-based-migrations
+
 
 # Endpoints
 The project runs an HTTP and a gRPC server simultaneously. By default, the HTTP server is running on `9988`, and the 

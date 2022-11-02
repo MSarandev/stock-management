@@ -2,13 +2,27 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"stocks-api/module/entities"
+	"github.com/spf13/cobra"
+	"github.com/uptrace/bun/migrate"
+	migrations2 "stocks-api/migrations"
 	"stocks-api/support/db"
+)
+
+// a struct that holds commands that need to be registered.
+type fnFlags struct {
+	fn    *cobra.Command
+	flag  string
+	usage string
+}
+
+const (
+	_generateFlag = "name"
 )
 
 func init() {
@@ -18,33 +32,104 @@ func init() {
 }
 
 func main() {
+	var rootCmd = &cobra.Command{}
+
+	// Flags registration.
+	for _, fn := range functionsRegistrar() {
+		if fn.flag != "" {
+			fn.fn.PersistentFlags().String(fn.flag, "", fn.usage)
+		}
+
+		rootCmd.AddCommand(fn.fn)
+	}
+
+	rootCmd.Execute()
+}
+
+func functionsRegistrar() [4]fnFlags {
+	ctx := context.Background()
+
+	init := &cobra.Command{
+		Use:   "init",
+		Short: "Initialises the bun_migration tables",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			migrator, err := spinUpDb()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return migrator.Init(ctx)
+		},
+	}
+
+	migrate := &cobra.Command{
+		Use:   "migrate",
+		Short: "Migrate applies migrations",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			migrator, err := spinUpDb()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return migrator.Migrate(ctx)
+		},
+	}
+
+	rollback := &cobra.Command{
+		Use:   "rollback",
+		Short: "Rollback handles rollbacks",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			migrator, err := spinUpDb()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return migrator.Rollback(ctx)
+		},
+	}
+
+	generate := &cobra.Command{
+		Use:     "generate",
+		Example: fmt.Sprintf("generate --%s <migration-name>", _generateFlag),
+		Short:   "Generates SQL migrations files",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name, err := cmd.Flags().GetString(_generateFlag)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			migrator, err := spinUpDb()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return migrator.GenerateMigrations(ctx, name)
+		},
+	}
+
+	return [4]fnFlags{
+		{fn: init},
+		{fn: generate, flag: _generateFlag, usage: "generation name"},
+		{fn: migrate},
+		{fn: rollback},
+	}
+}
+
+func spinUpDb() (*db.Migrator, error) {
 	logger := logrus.New()
 
 	conn, err := db.NewConnection()
 	if err != nil {
-		logger.Fatal(err)
+		return nil, err
 	}
-
-	flag := os.Args[1]
 
 	instance := db.NewInstance(conn, logger)
 	logger.Log(logrus.InfoLevel, "DB conn: ", instance.Health())
 
-	migrator := db.NewMigrator(logger, instance)
+	migrations := migrate.NewMigrations(migrate.WithMigrationsDirectory("migrations"))
+	migrations.Discover(migrations2.MigrationFilesScan())
 
-	if flag == "migrate" {
-		migrate(migrator)
-	}
+	migrator := migrate.NewMigrator(instance.Base, migrations)
 
-	if flag == "rollback" {
-		rollback(migrator)
-	}
-}
-
-func migrate(m *db.Migrator) {
-	m.MigrateOne(context.Background(), &entities.Stock{}, "stock")
-}
-
-func rollback(m *db.Migrator) {
-	m.RollbackOne(context.Background(), &entities.Stock{}, "stock")
+	return db.NewMigrator(logger, instance, migrator), nil
 }
