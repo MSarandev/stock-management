@@ -14,6 +14,7 @@ import (
 	"stocks-api/support/db"
 )
 
+// a struct that holds commands that need to be registered.
 type fnFlags struct {
 	fn    *cobra.Command
 	flag  string
@@ -45,7 +46,7 @@ func main() {
 	rootCmd.Execute()
 }
 
-func functionsRegistrar() [5]fnFlags {
+func functionsRegistrar() [4]fnFlags {
 	ctx := context.Background()
 
 	init := &cobra.Command{
@@ -106,20 +107,10 @@ func functionsRegistrar() [5]fnFlags {
 		},
 	}
 
-	status := &cobra.Command{
-		// TODO: implement this
-		Use:   "status",
-		Short: "Returns the current status of the migrations",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("In status check")
-		},
-	}
-
-	return [5]fnFlags{
+	return [4]fnFlags{
 		{fn: init},
 		{fn: generate, flag: _generateFlag, usage: "generation name"},
 		{fn: migrate},
-		{fn: status},
 		{fn: rollback},
 	}
 }

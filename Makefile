@@ -19,6 +19,10 @@ down-v:
 	@docker-compose down -v --remove-orphans
 	@docker-compose ps
 
+.PHONY: migrations-init
+migrations-init:
+	@go run cmd/migrator/main.go init
+
 .PHONY: migrations-generate
 migrations-generate:
 	@go run cmd/migrator/main.go generate --name=${name}

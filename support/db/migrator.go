@@ -24,6 +24,11 @@ func NewMigrator(logger *logrus.Logger, db *Instance, migrator *migrate.Migrator
 	}
 }
 
+// Init initialises bun's migration tables.
+func (m *Migrator) Init(ctx context.Context) error {
+	return m.bunMigrator.Init(ctx)
+}
+
 // GenerateMigrations generates SQL based migration files.
 func (m *Migrator) GenerateMigrations(ctx context.Context, name string) error {
 	files, err := m.bunMigrator.CreateSQLMigrations(ctx, name)
@@ -51,12 +56,6 @@ func (m *Migrator) Migrate(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// Init initialises bun's migration tables.
-// TODO: add an entry in the Readme for this
-func (m *Migrator) Init(ctx context.Context) error {
-	return m.bunMigrator.Init(ctx)
 }
 
 // Rollback rolls-back the last migration group.
