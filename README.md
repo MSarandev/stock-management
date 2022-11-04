@@ -44,7 +44,7 @@ Maps the HTTP endpoints 1:1. Check that section for more info
 ### [GET] localhost:9988
 
 Returns all entries in the db. <br>
-Pagination is supported in the reques: <br>
+Pagination is supported in the request (both gRPC and HTTP): <br>
 
 ```json
 {
