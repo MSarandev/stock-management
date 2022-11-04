@@ -2,7 +2,7 @@ version: '3'
 services:
   db:
     container_name: db
-    image: postgres:14.1
+    image: 'postgres:14.1'
     command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
     restart: always
     volumes:
@@ -23,7 +23,7 @@ services:
 
   db_test:
     container_name: db_test
-    image: postgres:14.1
+    image: 'postgres:14.1'
     command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
     restart: always
     volumes:
@@ -54,19 +54,34 @@ services:
 
   kafka:
     container_name: stocks_kafka
-    image: 'bitnami/kafka:latest'
+    image: 'wurstmeister/kafka:2.13-2.8.1'
     ports:
       - 9099:9092
     environment:
-      - KAFKA_BROKER_ID=${KAFKA_BROKER_ID}
-      - KAFKA_CFG_LISTENERS=${KAFKA_CFG_LISTENERS}
-      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS}
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=${KAFKA_CFG_ZOOKEEPER_CONNECT}
-      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_CREATE_TOPICS: ${KAFKA_CREATE_TOPICS}
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT"
+      KAFKA_LISTENERS: "INSIDE://:9092,OUTSIDE://:${KAFKA_PORT}"
+      KAFKA_ADVERTISED_LISTENERS: "INSIDE://:9092,OUTSIDE://${HOST_IP}:${KAFKA_PORT}"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INSIDE"
+      KAFKA_ZOOKEEPER_CONNECT: "stocks_zookeeper:2181"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     volumes:
       - ./docker/kafka/store:/bitnami/kafka
+      - ./docker/kafka/logs:/var/lib/kafka
     depends_on:
       - zookeeper
+    networks:
+      - stock_api_internal
+
+  redis:
+    container_name: stocks_redis
+    image: 'redis:6.2'
+    volumes:
+      - ./docker/redis/store:/data
+    ports:
+      - 6389:6379
     networks:
       - stock_api_internal
 

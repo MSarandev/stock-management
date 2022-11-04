@@ -9,6 +9,10 @@ init:
 start:
 	@docker-compose up -d
 
+.PHONY: start-v
+start-v:
+	@docker-compose up
+
 .PHONY: down
 down:
 	@docker-compose down --remove-orphans
