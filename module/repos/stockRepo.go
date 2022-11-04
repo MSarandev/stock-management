@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"stocks-api/module/entities"
+	"stocks-api/module/entities/filters"
 	"stocks-api/support/db"
 )
 
@@ -27,12 +28,22 @@ func NewStockRepo(l *logrus.Logger, db *db.Instance) *StockRepo {
 	}
 }
 
+// Count counts all records in the db.
+func (s *StockRepo) Count(ctx context.Context) (int, error) {
+	return s.db.Base.NewSelect().
+		Model(new(entities.Stock)).
+		Count(ctx)
+}
+
 // GetAll returns all records from the database.
-func (s *StockRepo) GetAll(ctx context.Context) ([]*entities.Stock, error) {
+func (s *StockRepo) GetAll(ctx context.Context, pagination *filters.Pagination) ([]*entities.Stock, error) {
 	var x []*entities.Stock
 
 	s.db.Base.NewSelect().
 		Model(new(entities.Stock)).
+		OrderExpr("created_at ASC").
+		Limit(pagination.ItemsPerPage).
+		Offset(filters.GenerateOffset(pagination.Page, pagination.ItemsPerPage)).
 		Scan(ctx, &x)
 
 	return x, nil

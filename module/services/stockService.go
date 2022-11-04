@@ -7,17 +7,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"stocks-api/module/entities"
+	"stocks-api/module/entities/filters"
 	"stocks-api/module/repos"
 	"stocks-api/support/db"
 )
 
 // StockStore a contract to the Stock Repo.
 type StockStore interface {
-	GetAll(ctx context.Context) ([]*entities.Stock, error)
+	GetAll(ctx context.Context, pagination *filters.Pagination) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, id uuid.UUID) (*entities.Stock, error)
 	InsertOne(ctx context.Context, stock *entities.Stock) error
 	UpdateOne(ctx context.Context, stock *entities.Stock) error
 	DeleteOne(ctx context.Context, id uuid.UUID) error
+	Count(ctx context.Context) (int, error)
 }
 
 // StockService provides high level logic.
@@ -38,8 +40,8 @@ func NewStockService(l *logrus.Logger, db *db.Instance, ctx context.Context) *St
 }
 
 // GetAll returns all records in the db.
-func (s *StockService) GetAll(ctx context.Context) ([]*entities.Stock, error) {
-	return s.repo.GetAll(ctx)
+func (s *StockService) GetAll(ctx context.Context, filters *filters.Pagination) ([]*entities.Stock, error) {
+	return s.repo.GetAll(ctx, filters)
 }
 
 // GetOne returns a single record in the db.
@@ -85,6 +87,11 @@ func (s *StockService) DeleteOne(ctx context.Context, stockId string) error {
 	}
 
 	return s.repo.DeleteOne(ctx, id)
+}
+
+// Count returns the number of all records in the db.
+func (s *StockService) Count(ctx context.Context) (int, error) {
+	return s.repo.Count(ctx)
 }
 
 // checkQuantity a custom quantity check, due to the unique way Go handles zero values.

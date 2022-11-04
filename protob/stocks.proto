@@ -35,11 +35,14 @@ message GetStockResponse {
 }
 
 // ListStocksRequest is the request definition.
-message ListStocksRequest {}
+message ListStocksRequest {
+  Pagination pagination = 2;
+}
 
 // ListStocksResponse is the response definition.
 message ListStocksResponse {
   repeated SingleStock stocks = 1;
+  int64 total_count = 2;
 }
 
 // CreateStockRequest is the request definition.
@@ -73,6 +76,8 @@ message SingleStock {
   int64 quantity = 3;
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
+  string h_created_at = 6; // human readable timestamp
+  string h_updated_at = 7; // human readable timestamp
 }
 
 // EditableStock represents an editable/creatable stock item.
@@ -86,4 +91,10 @@ message EditableStock {
 message NewStock {
   string name = 1;
   int64 quantity = 2;
+}
+
+// Pagination is used within listing operation.
+message Pagination {
+  int64 page = 1;
+  int64 items_per_page = 2;
 }

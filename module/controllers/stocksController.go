@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"stocks-api/module/entities"
+	"stocks-api/module/entities/filters"
 	"stocks-api/module/services"
 	"stocks-api/module/validators"
 	"stocks-api/support/db"
@@ -26,11 +27,12 @@ const (
 
 // A contract to the StockService for high level logic operations.
 type StockService interface {
-	GetAll(ctx context.Context) ([]*entities.Stock, error)
+	GetAll(ctx context.Context, filters *filters.Pagination) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, stockId string) (*entities.Stock, error)
 	InsertOne(ctx context.Context, stock *entities.Stock) error
 	UpdateOne(ctx context.Context, stock *entities.Stock, stockId string) error
 	DeleteOne(ctx context.Context, stockId string) error
+	Count(ctx context.Context) (int, error)
 }
 
 // StockController handles the business logic when an endpoint is hit.
@@ -52,13 +54,29 @@ func NewStockController(l *logrus.Logger, db *db.Instance, ctx context.Context) 
 }
 
 // GetAll returns all records in the database.
-func (s *StockController) GetAll(w http.ResponseWriter, _ *http.Request) {
-	res, errGet := s.service.GetAll(s.ctx)
+func (s *StockController) GetAll(w http.ResponseWriter, req *http.Request) {
+	pagination, errParse := parsePagination(req)
+	if errParse != nil {
+		s.logger.Errorf("Failed to parse pagination: %s", errParse.Error())
+
+		json.NewEncoder(w).Encode(errors.New("Failed to parse pagination"))
+	}
+
+	res, errGet := s.service.GetAll(s.ctx, pagination)
 	if errGet != nil {
 		json.NewEncoder(w).Encode(errGet)
 	}
 
-	json.NewEncoder(w).Encode(res)
+	count, errCount := s.service.Count(s.ctx)
+	if errCount != nil {
+		s.logger.Error(errCount)
+		json.NewEncoder(w).Encode(errCount)
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"stocks":      res,
+		"total_count": count,
+	})
 }
 
 // GetOne returns a single record in the database.
@@ -158,4 +176,19 @@ func reqToStock(r *http.Request) (*entities.Stock, error) {
 	}
 
 	return &stock, nil
+}
+
+func parsePagination(r *http.Request) (*filters.Pagination, error) {
+	reqBody, errRead := ioutil.ReadAll(r.Body)
+	if errRead != nil {
+		return nil, errRead
+	}
+
+	var unm map[string]*filters.Pagination
+
+	if err := json.Unmarshal(reqBody, &unm); err != nil {
+		return nil, err
+	}
+
+	return unm["pagination"], nil
 }

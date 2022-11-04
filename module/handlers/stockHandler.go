@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	pb "stocks-api/genprotos"
 	"stocks-api/module/entities"
+	"stocks-api/module/entities/filters"
 	"stocks-api/module/services"
 	"stocks-api/module/validators"
 	"stocks-api/support/db"
@@ -15,11 +16,12 @@ import (
 
 // StockService an interface to the service.
 type StockService interface {
-	GetAll(ctx context.Context) ([]*entities.Stock, error)
+	GetAll(ctx context.Context, pagination *filters.Pagination) ([]*entities.Stock, error)
 	GetOne(ctx context.Context, stockId string) (*entities.Stock, error)
 	InsertOne(ctx context.Context, stock *entities.Stock) error
 	UpdateOne(ctx context.Context, stock *entities.Stock, stockId string) error
 	DeleteOne(ctx context.Context, stockId string) error
+	Count(ctx context.Context) (int, error)
 }
 
 // StockHandler handles all gRPC stock requests.
@@ -55,14 +57,32 @@ func (s *StockHandler) GetStock(ctx context.Context, request *pb.GetStockRequest
 }
 
 // ListStocks lists all stocks available in the db.
-func (s *StockHandler) ListStocks(ctx context.Context, _ *pb.ListStocksRequest) (*pb.ListStocksResponse, error) {
-	stocks, err := s.service.GetAll(ctx)
+func (s *StockHandler) ListStocks(ctx context.Context, req *pb.ListStocksRequest) (*pb.ListStocksResponse, error) {
+	if req.GetPagination() == nil {
+		return nil, errors.New("Pagination is required")
+	}
+
+	// TODO: validation
+	pagination := &filters.Pagination{
+		Page:         int(req.GetPagination().GetPage()),
+		ItemsPerPage: int(req.GetPagination().GetItemsPerPage()),
+	}
+
+	stocks, err := s.service.GetAll(ctx, pagination)
 	if err != nil {
+		s.logger.Error(err)
 		return nil, errors.New("Failed to list stocks")
 	}
 
+	count, err := s.service.Count(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, errors.New("Failed to get count")
+	}
+
 	return &pb.ListStocksResponse{
-		Stocks: toStockListPb(stocks),
+		Stocks:     toStockListPb(stocks),
+		TotalCount: int64(count),
 	}, nil
 }
 

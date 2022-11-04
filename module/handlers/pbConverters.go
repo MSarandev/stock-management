@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"time"
+
 	"google.golang.org/protobuf/types/known/timestamppb"
 	pb "stocks-api/genprotos"
 	"stocks-api/module/entities"
@@ -19,6 +21,8 @@ func toStockPb(stock *entities.Stock) *pb.SingleStock {
 			Seconds: stock.UpdatedAt.Unix(),
 			Nanos:   int32(stock.UpdatedAt.Nanosecond()),
 		},
+		HCreatedAt: stock.CreatedAt.Format(time.RFC3339),
+		HUpdatedAt: stock.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
